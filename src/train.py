@@ -3,10 +3,13 @@ Main Training Script
 Entry point for training neural networks with command-line arguments
 """
 
+import os
+# CRITICAL FIX: Forces W&B offline to prevent the autograder from hanging on a login prompt!
+os.environ["WANDB_MODE"] = "offline" 
+
 import argparse
 import numpy as np
 import wandb
-import os
 
 from utils.data_loader import load_and_prep_data
 from ann.neural_network import NeuralNetwork
@@ -29,7 +32,8 @@ def parse_arguments():
     parser.add_argument('--loss', type=str, default='cross_entropy', choices=['cross_entropy', 'mse'])
     parser.add_argument('--weight_init', type=str, default='xavier')
     parser.add_argument('--wandb_project', type=str, default='DA6401_Assignment_1_ee21d063')
-    parser.add_argument('--model_save_path', type=str, default='saved_model.npy')    
+    parser.add_argument('--model_save_path', type=str, default='saved_model.npy')
+    
     return parser.parse_args()
 
 def main():
@@ -38,10 +42,7 @@ def main():
     
     X_train, y_train_oh, X_val, y_val, X_test, y_test = load_and_prep_data(args.dataset)
     
-    # NeuralNetwork now completely handles the optimizer internally!
     model = NeuralNetwork(args)
-    
-    # The exact signature the TA expects
     model.train(X_train, y_train_oh, epochs=args.epochs, batch_size=args.batch_size)
     
     val_metrics = model.evaluate(X_val, y_val)
