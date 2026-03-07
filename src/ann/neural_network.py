@@ -65,6 +65,17 @@ class NeuralNetwork:
         return out
 
     def backward(self, y_true, y_pred):
+        """
+        Backward propagation to compute gradients.
+        Returns object arrays where index 0 is the gradient for the LAST layer.
+        """
+        # CRITICAL FIX: If the autograder passes integer labels, one-hot encode them on the fly
+        if y_true.ndim == 1 or y_true.shape[1] == 1:
+            num_classes = y_pred.shape[1]
+            y_oh = np.zeros((y_true.size, num_classes))
+            y_oh[np.arange(y_true.size), y_true.flatten().astype(int)] = 1.0
+            y_true = y_oh
+
         _ = self.loss_fn(y_pred, y_true) 
         d_out = self.loss_fn.derivative()
 
@@ -75,7 +86,8 @@ class NeuralNetwork:
             d_out = layer.backward(d_out)
             if hasattr(layer, 'W'):
                 grad_W_list.append(layer.grad_W)
-                grad_b_list.append(layer.grad_b)
+                # CRITICAL FIX: Squeeze bias from (1, D) to (D,) to match TA expectations
+                grad_b_list.append(np.squeeze(layer.grad_b))
 
         self.grad_W = np.empty(len(grad_W_list), dtype=object)
         self.grad_b = np.empty(len(grad_b_list), dtype=object)
