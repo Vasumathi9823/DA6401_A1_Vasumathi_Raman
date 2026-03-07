@@ -50,7 +50,7 @@ def main():
     metrics = evaluate_model(model, X_test, y_test)
     
     print("\n" + "="*35)
-    print("🎯 FINAL INFERENCE RESULTS 🎯")
+    print("FINAL INFERENCE RESULTS")
     print("="*35)
     print(f"Accuracy:  {metrics['accuracy']:.4f}")
     print(f"F1-Score:  {metrics['f1']:.4f}")
