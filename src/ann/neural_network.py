@@ -16,7 +16,6 @@ class NeuralNetwork:
     """
 
     def __init__(self, cli_args):
-        # Bulletproof arg extraction
         def get_arg(key, default):
             if isinstance(cli_args, dict):
                 return cli_args.get(key, default)
@@ -25,7 +24,6 @@ class NeuralNetwork:
         self.input_dim = get_arg('input_dim', 784)  
         self.output_dim = get_arg('output_dim', 10)
         
-        # CRITICAL FIX: Separate Dense and Activations so the TA's get_weights loop doesn't crash!
         self.layers = [] 
         self.activations = [] 
         
@@ -71,7 +69,6 @@ class NeuralNetwork:
 
     def forward(self, X):
         out = X
-        # Apply activation sequentially only after hidden layers
         for i, layer in enumerate(self.layers):
             out = layer.forward(out)
             if i < len(self.activations):
@@ -157,7 +154,6 @@ class NeuralNetwork:
             "recall": recall_score(y, preds, average='macro', zero_division=0)
         }
 
-    # EXACT TA FORMAT
     def get_weights(self):
         d = {}
         for i, layer in enumerate(self.layers):
@@ -167,7 +163,6 @@ class NeuralNetwork:
 
     def set_weights(self, weight_dict):
         for i, layer in enumerate(self.layers):
-            # Fallback to safely catch old Colab dictionary names just in case
             w_key = f"W{i}" if f"W{i}" in weight_dict else f"layer_{i}_W"
             b_key = f"b{i}" if f"b{i}" in weight_dict else f"layer_{i}_b"
             
