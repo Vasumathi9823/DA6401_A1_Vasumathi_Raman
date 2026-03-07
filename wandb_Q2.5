@@ -1,0 +1,54 @@
+import wandb
+import numpy as np
+
+def dead_neuron_investigation():
+    configs = [
+        {"activation": "relu", "lr": 0.1, "name": "dead_neuron_relu_high_lr"},
+        {"activation": "tanh", "lr": 0.001, "name": "stable_tanh_comparison"}
+    ]
+
+    X_train, y_train_oh, X_val, y_val, _, _ = load_and_prep_data('mnist')
+    input_dim = X_train.shape[1]
+    output_dim = 10
+    hidden_sizes = [128, 128, 128]
+
+    for config in configs:
+        run = wandb.init(
+            project='DA6401_Assignment_1_ee21d063',
+            name=config["name"],
+            config=config,
+            reinit=True
+        )
+
+        model = NeuralNetwork(input_dim, hidden_sizes, output_dim, config["activation"], "random")
+        loss_fn = CrossEntropy()
+        opt = SGD(lr=config["lr"])
+
+        num_samples = X_train.shape[0]
+        batch_size = 64
+
+        for epoch in range(5):
+            indices = np.random.permutation(num_samples)
+            for i in range(0, num_samples, batch_size):
+                X_batch = X_train[indices[i:i+batch_size]]
+                y_batch = y_train_oh[indices[i:i+batch_size]]
+
+                logits = model.forward(X_batch)
+                loss_fn(logits, y_batch)
+                model.backward(loss_fn.derivative())
+
+                if config["activation"] == "relu":
+                    for idx, layer in enumerate(model.layers):
+                        if hasattr(layer, 'output'):
+                            dead_share = np.mean(layer.output <= 0)
+                            wandb.log({f"layer_{idx}_dead_fraction": dead_share})
+
+                opt.update(model.layers)
+
+            val_acc = accuracy_score(y_val, np.argmax(model.forward(X_val), axis=1))
+            wandb.log({"epoch": epoch + 1, "val_accuracy": val_acc})
+            print(f"Run: {config['name']} | Epoch {epoch+1} | Val Acc: {val_acc:.4f}")
+
+        run.finish()
+
+dead_neuron_investigation()
