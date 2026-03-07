@@ -1,10 +1,6 @@
-"""
-Main Training Script
-Entry point for training neural networks with command-line arguments
-"""
+
 
 import os
-# CRITICAL FIX: Forces W&B offline to prevent the autograder from timing out!
 os.environ["WANDB_MODE"] = "offline" 
 
 import argparse
@@ -33,7 +29,6 @@ def parse_arguments():
     parser.add_argument('--weight_init', type=str, default='xavier')
     parser.add_argument('--wandb_project', type=str, default='DA6401_Assignment_1_ee21d063')
     
-    # CRITICAL FIX: Save as saved_model.npy so it doesn't overwrite your best_model.npy during autograding
     parser.add_argument('--model_save_path', type=str, default='saved_model.npy')
     
     return parser.parse_args()
@@ -46,7 +41,6 @@ def main():
     
     model = NeuralNetwork(args)
     
-    # Notice: No optimizer argument here! NeuralNetwork handles it internally now.
     model.train(X_train, y_train_oh, epochs=args.epochs, batch_size=args.batch_size)
     
     val_metrics = model.evaluate(X_val, y_val)
