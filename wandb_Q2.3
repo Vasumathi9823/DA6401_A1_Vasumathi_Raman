@@ -1,0 +1,76 @@
+import wandb
+import numpy as np
+
+OPTIMIZERS = ['sgd', 'momentum', 'nag', 'rmsprop']
+CONFIG = {
+    "num_layers": 3,
+    "hidden_neurons": 128,
+    "activation": "relu",
+    "learning_rate": 0.001,
+    "epochs": 5,           # Focus on the first 5 epochs as required
+    "batch_size": 64,
+    "weight_init": "xavier",
+    "weight_decay": 0.0005
+}
+
+def run_optimizer_showdown():
+    # Load data once outside the loop
+    X_train, y_train_oh, X_val, y_val, X_test, y_test = load_and_prep_data('mnist')
+    input_dim = X_train.shape[1]
+    output_dim = 10
+    hidden_sizes = [CONFIG["hidden_neurons"]] * CONFIG["num_layers"]
+
+    for opt_name in OPTIMIZERS:
+
+        run = wandb.init(
+            project='DA6401_Assignment_1_ee21d063',
+            name=f"optimizer_{opt_name}",
+            config={**CONFIG, "optimizer": opt_name}
+        )
+
+        # The network as follows,
+        model = NeuralNetwork(input_dim, hidden_sizes, output_dim, CONFIG["activation"], CONFIG["weight_init"])
+        loss_fn = CrossEntropy()
+
+
+        if opt_name == 'sgd':
+            opt = SGD(lr=CONFIG["learning_rate"], weight_decay=CONFIG["weight_decay"])
+        elif opt_name == 'momentum':
+            opt = Momentum(lr=CONFIG["learning_rate"], weight_decay=CONFIG["weight_decay"])
+        elif opt_name == 'nag':
+            opt = NAG(lr=CONFIG["learning_rate"], weight_decay=CONFIG["weight_decay"])
+        elif opt_name == 'rmsprop':
+            opt = RMSProp(lr=CONFIG["learning_rate"], weight_decay=CONFIG["weight_decay"])
+
+
+        num_samples = X_train.shape[0]
+        for epoch in range(CONFIG["epochs"]):
+            indices = np.random.permutation(num_samples)
+            X_shuffled = X_train[indices]
+            y_shuffled = y_train_oh[indices]
+
+            epoch_loss = 0
+            for i in range(0, num_samples, CONFIG["batch_size"]):
+                X_batch = X_shuffled[i:i+CONFIG["batch_size"]]
+                y_batch = y_shuffled[i:i+CONFIG["batch_size"]]
+
+                logits = model.forward(X_batch)
+                loss = loss_fn(logits, y_batch)
+                epoch_loss += loss
+
+                model.backward(loss_fn.derivative())
+                opt.update(model.layers)
+
+
+            val_accuracy = accuracy_score(y_val, np.argmax(model.forward(X_val), axis=1))
+            wandb.log({
+                "epoch": epoch + 1,
+                "train_loss": epoch_loss / (num_samples // CONFIG["batch_size"]),
+                "val_accuracy": val_accuracy
+            })
+            print(f"Opt: {opt_name} | Epoch {epoch+1} | Val Acc: {val_accuracy:.4f}")
+
+        run.finish()
+
+# Execute the comparison
+run_optimizer_showdown()
