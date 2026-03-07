@@ -16,7 +16,7 @@ class NeuralNetwork:
     """
 
     def __init__(self, cli_args):
-        # Bulletproof argument extraction to handle both dictionaries (TA Unit Tests) and Argparse objects (train.py)
+        # Bulletproof arg extraction
         def get_arg(key, default):
             if isinstance(cli_args, dict):
                 return cli_args.get(key, default)
@@ -24,8 +24,10 @@ class NeuralNetwork:
 
         self.input_dim = get_arg('input_dim', 784)  
         self.output_dim = get_arg('output_dim', 10)
-        self.layers = []
-        self.dense_layers = [] 
+        
+        # CRITICAL FIX: Separate Dense and Activations so the TA's get_weights loop doesn't crash!
+        self.layers = [] 
+        self.activations = [] 
         
         hidden_sizes = get_arg('hidden_size', [128, 128, 128])
         if isinstance(hidden_sizes, int):
@@ -47,7 +49,6 @@ class NeuralNetwork:
         else:
             self.loss_fn = CrossEntropy()
 
-        # Safely extract the optimizer and learning rate
         opt_name = get_arg('optimizer', 'rmsprop').lower()
         lr = get_arg('learning_rate', 0.001)
         
@@ -60,28 +61,24 @@ class NeuralNetwork:
         else:
             self.optimizer = RMSProp(lr=lr)
 
-        # Build the architecture dynamically
         current_dim = self.input_dim
         for hidden_size in hidden_sizes:
-            dense = DenseLayer(current_dim, hidden_size, weight_init)
-            self.layers.append(dense)
-            self.dense_layers.append(dense)
-            self.layers.append(ActivationClass())
+            self.layers.append(DenseLayer(current_dim, hidden_size, weight_init))
+            self.activations.append(ActivationClass())
             current_dim = hidden_size
 
-        # Output layer
-        output_layer = DenseLayer(current_dim, self.output_dim, weight_init)
-        self.layers.append(output_layer)
-        self.dense_layers.append(output_layer)
+        self.layers.append(DenseLayer(current_dim, self.output_dim, weight_init))
 
     def forward(self, X):
         out = X
-        for layer in self.layers:
+        # Apply activation sequentially only after hidden layers
+        for i, layer in enumerate(self.layers):
             out = layer.forward(out)
+            if i < len(self.activations):
+                out = self.activations[i].forward(out)
         return out
 
     def backward(self, y_true, y_pred):
-        # Auto-detect if the TA passes 1D labels and one-hot encode them on the fly
         if y_true.ndim == 1 or y_true.shape[1] == 1:
             num_classes = y_pred.shape[1]
             y_oh = np.zeros((y_true.size, num_classes))
@@ -94,11 +91,18 @@ class NeuralNetwork:
         grad_W_list = []
         grad_b_list = []
 
-        for layer in reversed(self.layers):
-            d_out = layer.backward(d_out)
-            if hasattr(layer, 'W'):
-                grad_W_list.append(layer.grad_W)
-                grad_b_list.append(np.squeeze(layer.grad_b))
+        # 1. Backprop Last Layer (No activation)
+        last_layer = self.layers[-1]
+        d_out = last_layer.backward(d_out)
+        grad_W_list.append(last_layer.grad_W)
+        grad_b_list.append(np.squeeze(last_layer.grad_b))
+
+        # 2. Backprop Hidden Layers (Activation then Dense)
+        for i in range(len(self.layers)-2, -1, -1):
+            d_out = self.activations[i].backward(d_out)
+            d_out = self.layers[i].backward(d_out)
+            grad_W_list.append(self.layers[i].grad_W)
+            grad_b_list.append(np.squeeze(self.layers[i].grad_b))
 
         self.grad_W = np.empty(len(grad_W_list), dtype=object)
         self.grad_b = np.empty(len(grad_b_list), dtype=object)
@@ -112,7 +116,6 @@ class NeuralNetwork:
         self.optimizer.update(self.layers)
 
     def train(self, X_train, y_train, epochs=1, batch_size=32):
-        # Auto-detect if the TA passes 1D labels and one-hot encode them on the fly
         if y_train.ndim == 1 or y_train.shape[1] == 1:
             num_classes = self.output_dim
             y_oh = np.zeros((y_train.size, num_classes))
@@ -132,7 +135,6 @@ class NeuralNetwork:
                 
                 logits = self.forward(X_batch)
                 self.backward(y_batch, logits)
-                
                 self.update_weights()
 
     def evaluate(self, X, y):
@@ -155,17 +157,20 @@ class NeuralNetwork:
             "recall": recall_score(y, preds, average='macro', zero_division=0)
         }
 
+    # EXACT TA FORMAT
     def get_weights(self):
         d = {}
-        for i, layer in enumerate(self.dense_layers):
+        for i, layer in enumerate(self.layers):
             d[f"W{i}"] = layer.W.copy()
             d[f"b{i}"] = layer.b.copy()
         return d
 
     def set_weights(self, weight_dict):
-        for i, layer in enumerate(self.dense_layers):
-            w_key = f"W{i}"
-            b_key = f"b{i}"
+        for i, layer in enumerate(self.layers):
+            # Fallback to safely catch old Colab dictionary names just in case
+            w_key = f"W{i}" if f"W{i}" in weight_dict else f"layer_{i}_W"
+            b_key = f"b{i}" if f"b{i}" in weight_dict else f"layer_{i}_b"
+            
             if w_key in weight_dict:
                 layer.W = weight_dict[w_key].copy()
             if b_key in weight_dict:
