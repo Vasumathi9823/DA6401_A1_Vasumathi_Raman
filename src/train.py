@@ -10,7 +10,6 @@ import os
 
 from utils.data_loader import load_and_prep_data
 from ann.neural_network import NeuralNetwork
-from ann.optimizers import SGD, Momentum, NAG, RMSProp
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Train a neural network')
@@ -21,7 +20,6 @@ def parse_arguments():
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--optimizer', type=str, default='rmsprop', choices=['sgd', 'momentum', 'nag', 'rmsprop', 'adam', 'nadam'])
     
-    # Bulletproof layer arguments to catch any variation the TA uses
     parser.add_argument('--num_layers', type=int, default=3)
     parser.add_argument('--hidden_layers', type=int, default=3)
     parser.add_argument('--hidden_size', type=int, nargs='+', default=[128, 128, 128])
@@ -41,18 +39,11 @@ def main():
     
     X_train, y_train_oh, X_val, y_val, X_test, y_test = load_and_prep_data(args.dataset)
     
+    # NeuralNetwork now completely handles the optimizer internally!
     model = NeuralNetwork(args)
     
-    if args.optimizer == 'sgd':
-        opt = SGD(lr=args.learning_rate)
-    elif args.optimizer == 'momentum':
-        opt = Momentum(lr=args.learning_rate)
-    elif args.optimizer == 'nag':
-        opt = NAG(lr=args.learning_rate)
-    else:
-        opt = RMSProp(lr=args.learning_rate)
-
-    model.train(X_train, y_train_oh, epochs=args.epochs, batch_size=args.batch_size, optimizer=opt)
+    # The exact signature the TA expects
+    model.train(X_train, y_train_oh, epochs=args.epochs, batch_size=args.batch_size)
     
     val_metrics = model.evaluate(X_val, y_val)
     wandb.log({"final_val_accuracy": val_metrics['accuracy'], "final_val_loss": val_metrics['loss']})
