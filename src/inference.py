@@ -57,7 +57,7 @@ def main():
     print(f"Precision: {metrics['precision']:.4f}")
     print(f"Recall:    {metrics['recall']:.4f}")
     print(f"Loss:      {metrics['loss']:.4f}")
-    print("="*35 + "\n")
+    print("\n")
     
     return metrics
 
