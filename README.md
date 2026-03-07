@@ -20,3 +20,5 @@ You can view the full hyperparameter sweeps, training logs, and sample images he
 
 # Contact
 For questions or issues, please contact ee21d063@smail.iitm.ac.in.
+
+WandB report: https://wandb.ai/vasumathi1998-indian-institute-of-technology-madras/DA6401_Assignment_1_ee21d063/reports/DA6401_EE21D063_ASSIGNMENT1--VmlldzoxNjEzNjEzOQ/edit?draftId=VmlldzoxNjEzNjUxNQ==  
