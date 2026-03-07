@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 from .neural_layer import DenseLayer
 from .activations import ReLU, Sigmoid, Tanh
 from .objective_functions import CrossEntropy, MeanSquaredError
+from .optimizers import SGD, Momentum, NAG, RMSProp
 
 class NeuralNetwork:
     """
@@ -15,16 +16,12 @@ class NeuralNetwork:
     """
 
     def __init__(self, cli_args):
-        # Allow the autograder to dynamically pass an input_dim for unit tests, otherwise default to 784
         self.input_dim = getattr(cli_args, 'input_dim', 784)  
         self.output_dim = getattr(cli_args, 'output_dim', 10)
         self.layers = []
         self.dense_layers = [] 
         
-        # CRITICAL FIX: Extract the list of sizes directly from the new argument
         hidden_sizes = getattr(cli_args, 'hidden_size', [128, 128, 128])
-        
-        # Safe-guard if the autograder mistakenly passes a single integer instead of a list
         if isinstance(hidden_sizes, int):
             hidden_sizes = [hidden_sizes] * getattr(cli_args, 'num_layers', 1)
 
@@ -44,7 +41,20 @@ class NeuralNetwork:
         else:
             self.loss_fn = CrossEntropy()
 
-        # Build the architecture dynamically based on the exact list provided
+        # --- CRITICAL FIX: Initialize Optimizer inside the class ---
+        opt_name = getattr(cli_args, 'optimizer', 'rmsprop').lower()
+        lr = getattr(cli_args, 'learning_rate', 0.001)
+        
+        if opt_name == 'sgd':
+            self.optimizer = SGD(lr=lr)
+        elif opt_name == 'momentum':
+            self.optimizer = Momentum(lr=lr)
+        elif opt_name == 'nag':
+            self.optimizer = NAG(lr=lr)
+        else:
+            self.optimizer = RMSProp(lr=lr)
+
+        # Build the architecture dynamically
         current_dim = self.input_dim
         for hidden_size in hidden_sizes:
             dense = DenseLayer(current_dim, hidden_size, weight_init)
@@ -65,11 +75,6 @@ class NeuralNetwork:
         return out
 
     def backward(self, y_true, y_pred):
-        """
-        Backward propagation to compute gradients.
-        Returns object arrays where index 0 is the gradient for the LAST layer.
-        """
-        # CRITICAL FIX: If the autograder passes integer labels, one-hot encode them on the fly
         if y_true.ndim == 1 or y_true.shape[1] == 1:
             num_classes = y_pred.shape[1]
             y_oh = np.zeros((y_true.size, num_classes))
@@ -86,7 +91,6 @@ class NeuralNetwork:
             d_out = layer.backward(d_out)
             if hasattr(layer, 'W'):
                 grad_W_list.append(layer.grad_W)
-                # CRITICAL FIX: Squeeze bias from (1, D) to (D,) to match TA expectations
                 grad_b_list.append(np.squeeze(layer.grad_b))
 
         self.grad_W = np.empty(len(grad_W_list), dtype=object)
@@ -97,10 +101,20 @@ class NeuralNetwork:
 
         return self.grad_W, self.grad_b
 
-    def update_weights(self, optimizer):
-        optimizer.update(self.layers)
+    def update_weights(self):
+        # Matches TA skeleton perfectly (no arguments)
+        self.optimizer.update(self.layers)
 
-    def train(self, X_train, y_train, epochs=1, batch_size=32, optimizer=None):
+    def train(self, X_train, y_train, epochs=1, batch_size=32):
+        # Matches TA skeleton perfectly (no optimizer argument)
+        
+        # Safe-guard for 1D labels
+        if y_train.ndim == 1 or y_train.shape[1] == 1:
+            num_classes = self.output_dim
+            y_oh = np.zeros((y_train.size, num_classes))
+            y_oh[np.arange(y_train.size), y_train.flatten().astype(int)] = 1.0
+            y_train = y_oh
+
         num_samples = X_train.shape[0]
         
         for epoch in range(epochs):
@@ -115,8 +129,7 @@ class NeuralNetwork:
                 logits = self.forward(X_batch)
                 self.backward(y_batch, logits)
                 
-                if optimizer is not None:
-                    self.update_weights(optimizer)
+                self.update_weights()
 
     def evaluate(self, X, y):
         logits = self.forward(X)
