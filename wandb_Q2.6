@@ -1,0 +1,89 @@
+import numpy as np
+
+class MSE:
+    def __init__(self):
+        self.y_pred = None
+        self.y_true = None
+
+    def __call__(self, y_pred, y_true):
+        # y_pred: output of softmax (batch_size, 10)
+        # y_true: one-hot labels (batch_size, 10)
+        self.y_pred = y_pred
+        self.y_true = y_true
+        # Mean of sum of squared differences
+        return np.mean(np.sum((y_pred - y_true)**2, axis=1))
+
+    def derivative(self):
+        # Derivative of MSE with respect to the input (logits/softmax output)
+        n = self.y_true.shape[0]
+        return 2 * (self.y_pred - self.y_true) / n
+
+
+
+
+import wandb
+
+def compare_loss_functions():
+    loss_options = ['cross_entropy', 'mse']
+
+    # Standardized configuration for fairness
+    config = {
+        "num_layers": 3,
+        "hidden_neurons": 128,
+        "activation": "relu",
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "batch_size": 64,
+        "weight_init": "xavier",
+        "optimizer": "rmsprop"
+    }
+
+    # Load data using your existing function
+    X_train, y_train_oh, X_val, y_val, _, _ = load_and_prep_data('mnist')
+    input_dim = X_train.shape[1]
+    output_dim = 10
+    hidden_sizes = [config["hidden_neurons"]] * config["num_layers"]
+
+    for loss_type in loss_options:
+        run = wandb.init(
+            project='DA6401_Assignment_1_ee21d063',
+            name=f"loss_comparison_{loss_type}",
+            config={**config, "loss_function": loss_type},
+            reinit=True
+        )
+
+        # Initialize Model and Optimizer
+        model = NeuralNetwork(input_dim, hidden_sizes, output_dim, config["activation"], config["weight_init"])
+        opt = RMSProp(lr=config["learning_rate"])
+
+        # Select Loss Function
+        if loss_type == 'cross_entropy':
+            loss_fn = CrossEntropy() # Assumes this is already defined in your notebook
+        else:
+            loss_fn = MSE()
+
+        num_samples = X_train.shape[0]
+        for epoch in range(config["epochs"]):
+            indices = np.random.permutation(num_samples)
+
+            for i in range(0, num_samples, config["batch_size"]):
+                X_batch = X_train[indices[i:i+config["batch_size"]]]
+                y_batch = y_train_oh[indices[i:i+config["batch_size"]]]
+
+                # Forward, Loss, Backward
+                logits = model.forward(X_batch)
+                loss_fn(logits, y_batch)
+                model.backward(loss_fn.derivative())
+
+                # Update weights
+                opt.update(model.layers)
+
+            # Validation
+            val_acc = accuracy_score(y_val, np.argmax(model.forward(X_val), axis=1))
+            wandb.log({"epoch": epoch + 1, "val_accuracy": val_acc})
+            print(f"Loss: {loss_type} | Epoch {epoch+1} | Val Acc: {val_acc:.4f}")
+
+        run.finish()
+
+# Run the experiment
+compare_loss_functions()
