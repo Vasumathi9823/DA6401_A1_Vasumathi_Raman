@@ -16,18 +16,24 @@ class NeuralNetwork:
     """
 
     def __init__(self, cli_args):
-        self.input_dim = getattr(cli_args, 'input_dim', 784)  
-        self.output_dim = getattr(cli_args, 'output_dim', 10)
+        # Bulletproof argument extraction to handle both dictionaries (TA Unit Tests) and Argparse objects (train.py)
+        def get_arg(key, default):
+            if isinstance(cli_args, dict):
+                return cli_args.get(key, default)
+            return getattr(cli_args, key, default)
+
+        self.input_dim = get_arg('input_dim', 784)  
+        self.output_dim = get_arg('output_dim', 10)
         self.layers = []
         self.dense_layers = [] 
         
-        hidden_sizes = getattr(cli_args, 'hidden_size', [128, 128, 128])
+        hidden_sizes = get_arg('hidden_size', [128, 128, 128])
         if isinstance(hidden_sizes, int):
-            hidden_sizes = [hidden_sizes] * getattr(cli_args, 'num_layers', 1)
+            hidden_sizes = [hidden_sizes] * get_arg('num_layers', 1)
 
-        activation_name = getattr(cli_args, 'activation', 'tanh')
-        weight_init = getattr(cli_args, 'weight_init', 'xavier')
-        loss_name = getattr(cli_args, 'loss', 'cross_entropy')
+        activation_name = get_arg('activation', 'tanh')
+        weight_init = get_arg('weight_init', 'xavier')
+        loss_name = get_arg('loss', 'cross_entropy')
 
         if activation_name.lower() == 'relu':
             ActivationClass = ReLU
@@ -41,9 +47,9 @@ class NeuralNetwork:
         else:
             self.loss_fn = CrossEntropy()
 
-        # --- CRITICAL FIX: Initialize Optimizer inside the class ---
-        opt_name = getattr(cli_args, 'optimizer', 'rmsprop').lower()
-        lr = getattr(cli_args, 'learning_rate', 0.001)
+        # Safely extract the optimizer and learning rate
+        opt_name = get_arg('optimizer', 'rmsprop').lower()
+        lr = get_arg('learning_rate', 0.001)
         
         if opt_name == 'sgd':
             self.optimizer = SGD(lr=lr)
@@ -75,6 +81,7 @@ class NeuralNetwork:
         return out
 
     def backward(self, y_true, y_pred):
+        # Auto-detect if the TA passes 1D labels and one-hot encode them on the fly
         if y_true.ndim == 1 or y_true.shape[1] == 1:
             num_classes = y_pred.shape[1]
             y_oh = np.zeros((y_true.size, num_classes))
@@ -102,13 +109,10 @@ class NeuralNetwork:
         return self.grad_W, self.grad_b
 
     def update_weights(self):
-        # Matches TA skeleton perfectly (no arguments)
         self.optimizer.update(self.layers)
 
     def train(self, X_train, y_train, epochs=1, batch_size=32):
-        # Matches TA skeleton perfectly (no optimizer argument)
-        
-        # Safe-guard for 1D labels
+        # Auto-detect if the TA passes 1D labels and one-hot encode them on the fly
         if y_train.ndim == 1 or y_train.shape[1] == 1:
             num_classes = self.output_dim
             y_oh = np.zeros((y_train.size, num_classes))
