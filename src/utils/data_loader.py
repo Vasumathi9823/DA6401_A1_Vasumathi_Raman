@@ -1,42 +1,45 @@
-"""
-Data Loading and Preprocessing
-Handles MNIST and Fashion-MNIST datasets
-"""
 import numpy as np
-from keras.datasets import mnist, fashion_mnist
+from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 
 def load_and_prep_data(dataset_name='mnist'):
     """
-    Loads, flattens, normalizes, and prepares the specified dataset.
+    Loads, normalizes, and prepares the specified dataset using scikit-learn.
     Returns: X_train, y_train_oh, X_val, y_val, X_test, y_test
     """
     
-    # 1. Load the data
+    # 1. Load the data using scikit-learn instead of Keras
     if dataset_name.lower() == 'mnist':
-        (X_train_full, y_train_full), (X_test, y_test) = mnist.load_data()
+        print("Downloading MNIST from OpenML (this may take a few seconds)...")
+        # parser='auto' prevents a deprecation warning in newer sklearn versions
+        X, y = fetch_openml('mnist_784', version=1, return_X_y=True, as_frame=False, parser='auto')
     elif dataset_name.lower() == 'fashion_mnist':
-        (X_train_full, y_train_full), (X_test, y_test) = fashion_mnist.load_data()
+        print("Downloading Fashion-MNIST from OpenML (this may take a few seconds)...")
+        X, y = fetch_openml('Fashion-MNIST', version=1, return_X_y=True, as_frame=False, parser='auto')
     else:
         raise ValueError(f"Unsupported dataset: {dataset_name}. Choose 'mnist' or 'fashion_mnist'.")
 
-    # 2. Flatten from 28x28 to 784 and normalize to [0, 1]
-    X_train_full = X_train_full.reshape(X_train_full.shape[0], -1) / 255.0
-    X_test = X_test.reshape(X_test.shape[0], -1) / 255.0
+    # 2. Normalize to [0, 1] (Data is already flattened to 784 by OpenML)
+    X = X / 255.0
+    y = y.astype(int)
 
-    # 3. Create Validation Set (10% of the original training data)
+    # 3. Create splits
+    # OpenML gives us the full 70k dataset. Standard split is 60k train, 10k test.
+    X_train_full, X_test, y_train_full, y_test = train_test_split(
+        X, y, test_size=10000, random_state=42, stratify=y
+    )
+
+    # Validation Set (10% of the 60k training data)
     X_train, X_val, y_train, y_val = train_test_split(
-        X_train_full, y_train_full, test_size=0.1, random_state=42
+        X_train_full, y_train_full, test_size=0.1, random_state=42, stratify=y_train_full
     )
 
     # 4. One-hot encode ONLY the training labels for the Loss function
-    def one_hot(y, num_classes=10):
-        encoded = np.zeros((y.size, num_classes))
-        encoded[np.arange(y.size), y] = 1.0
+    def one_hot(labels, num_classes=10):
+        encoded = np.zeros((labels.size, num_classes))
+        encoded[np.arange(labels.size), labels] = 1.0
         return encoded
 
     y_train_oh = one_hot(y_train)
 
-    # Note: y_val and y_test are kept as integer labels because our evaluation 
-    # metrics and the model.evaluate() method handle the conversion internally.
     return X_train, y_train_oh, X_val, y_val, X_test, y_test
