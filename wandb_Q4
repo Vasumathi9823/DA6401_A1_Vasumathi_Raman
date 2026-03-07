@@ -1,0 +1,72 @@
+import wandb
+import numpy as np
+
+def vanishing_gradient_analysis():
+    # Setup hyperparameters
+    activations = ['sigmoid', 'relu']
+    config = {
+        "num_layers": 6,
+        "hidden_neurons": 128,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "batch_size": 64,
+        "weight_init": "random",
+        "optimizer": "rmsprop",
+        "dataset": "mnist"
+    }
+
+    X_train, y_train_oh, X_val, y_val, _, _ = load_and_prep_data(config["dataset"])
+    input_dim = X_train.shape[1]
+    output_dim = 10
+    hidden_sizes = [config["hidden_neurons"]] * config["num_layers"]
+
+    for act_name in activations:
+        run = wandb.init(
+            project='DA6401_Assignment_1_ee21d063',
+            name=f"vanishing_grad_{act_name}",
+            config={**config, "activation": act_name},
+            reinit=True
+        )
+
+        model = NeuralNetwork(input_dim, hidden_sizes, output_dim, act_name, config["weight_init"])
+        loss_fn = CrossEntropy()
+        opt = RMSProp(lr=config["learning_rate"])
+
+        num_samples = X_train.shape[0]
+
+        print(f"--- Training with {act_name} ---")
+        for epoch in range(config["epochs"]):
+            indices = np.random.permutation(num_samples)
+
+            for i in range(0, num_samples, config["batch_size"]):
+                X_batch = X_train[indices[i:i+config["batch_size"]]]
+                y_batch = y_train_oh[indices[i:i+config["batch_size"]]]
+
+                # Forward Pass
+                logits = model.forward(X_batch)
+
+                # Compute Loss
+                batch_loss = loss_fn(logits, y_batch)
+
+                # Backward Pass
+                model.backward(loss_fn.derivative())
+
+
+                # model.layers[0] is the first DenseLayer
+                if hasattr(model.layers[0], 'grad_W'):
+                    grad_norm_l1 = np.linalg.norm(model.layers[0].grad_W)
+                    wandb.log({"grad_norm_layer_1": grad_norm_l1})
+
+                opt.update(model.layers)
+
+            val_logits = model.forward(X_val)
+            val_preds = np.argmax(val_logits, axis=1)
+            val_acc = accuracy_score(y_val, val_preds)
+
+            wandb.log({"epoch": epoch + 1, "val_accuracy": val_acc})
+            print(f"Epoch {epoch+1}: Val Accuracy = {val_acc:.4f}")
+
+        run.finish()
+
+# Execute the analysis
+vanishing_gradient_analysis()
