@@ -29,8 +29,7 @@ def parse_arguments():
     parser.add_argument('--loss', type=str, default='cross_entropy', choices=['cross_entropy', 'mse'])
     parser.add_argument('--weight_init', type=str, default='xavier')
     parser.add_argument('--wandb_project', type=str, default='DA6401_Assignment_1_ee21d063')
-    parser.add_argument('--model_save_path', type=str, default='best_model.npy')
-    
+    parser.add_argument('--model_save_path', type=str, default='saved_model.npy')    
     return parser.parse_args()
 
 def main():
