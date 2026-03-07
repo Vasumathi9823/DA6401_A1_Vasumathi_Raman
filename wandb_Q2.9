@@ -1,0 +1,53 @@
+import wandb
+import numpy as np
+
+def run_symmetry_experiment():
+    init_types = ['zeros', 'xavier']
+    X_train, y_train_oh, _, _, _, _ = load_and_prep_data('mnist')
+
+    for init_type in init_types:
+        run = wandb.init(
+            project='DA6401_Assignment_1_ee21d063',
+            name=f"init_comparison_{init_type}",
+            config={"initialization": init_type, "lr": 0.001},
+            reinit=True
+        )
+
+        model = NeuralNetwork(784, [128, 128], 10, "relu", init_type)
+        opt = SGD(lr=0.001)
+        loss_fn = CrossEntropy()
+
+        for i in range(50):
+            X_batch = X_train[i:i+1]
+            y_batch = y_train_oh[i:i+1]
+
+            logits = model.forward(X_batch)
+            loss_fn(logits, y_batch)
+            model.backward(loss_fn.derivative())
+
+            # Find the first layer that has weights
+            first_layer = model.layers[0]
+
+            # Check for the correct attribute name (dW or grad_W)
+            if hasattr(first_layer, 'dW'):
+                grads = first_layer.dW
+            elif hasattr(first_layer, 'grad_W'):
+                grads = first_layer.grad_W
+            else:
+                # If neither works, this prints available attributes to help you
+                print(f"Available attributes: {vars(first_layer).keys()}")
+                break
+
+            # Take gradients of the first 5 neurons
+            neuron_grads = np.mean(grads, axis=0)[:5]
+
+            log_dict = {"iteration": i}
+            for n in range(5):
+                log_dict[f"neuron_{n}_grad"] = neuron_grads[n]
+
+            wandb.log(log_dict)
+            opt.update(model.layers)
+
+        run.finish()
+
+run_symmetry_experiment()
