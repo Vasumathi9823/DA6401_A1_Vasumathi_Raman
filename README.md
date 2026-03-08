@@ -9,7 +9,7 @@ This is a part of DA6401 - Introduction to Deep Learning course Assignment. This
 - Structural Overlap Analysis: Conducted a visual audit to pinpoint naturally similar pairs, such as digits 4 and 9.
 - Model Impact Assessment: Determined that high visual ambiguity populates the off-diagonal cells of the confusion matrix, necessitating robust normalization or deeper architectures.
 
-The MNIST sample visualization is available in 
+The MNIST sample visualization is available in [here](https://wandb.ai/vasumathi1998-indian-institute-of-technology-madras/DA6401_Assignment_1_ee21d063/runs/lwnfyasa?nw=nwuservasumathi1998)
 
 # 2.2 Hyperparameter Optimization Strategy
 - Automated Sweep Setup: Configured a comprehensive wandb.sweep dictionary to iterate through variations in learning rates, batch sizes, optimizers, and activations.
