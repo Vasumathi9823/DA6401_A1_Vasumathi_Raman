@@ -1,5 +1,5 @@
 # DA6401_A1_Vasumathi_Raman
-This is a part of DA6401 - Introduction to Deep Learning course Assignment 
+This is a part of DA6401 - Introduction to Deep Learning course Assignment. This repository contains a from-scratch implementation of a Multi-Layer Perceptron (MLP) for classifying the MNIST and Fashion-MNIST datasets. It features deep Weights & Biases (W&B) integration to track large-scale hyperparameter sweeps, thoroughly analyze backpropagation dynamics (such as vanishing gradients and symmetry breaking), and evaluate model generalization.
 
 # Assignment 1: Multi-Layer Perceptron for Image Classification
 
@@ -66,7 +66,8 @@ The MNIST sample visualization is available in
 - Complexity Findings: Reported that accuracy typically drops on clothing data due to the higher entropy and texture variance compared to simple digits.
 - Hyperparameter Scaling: Justified increasing hidden_neurons (128 to 256) to provide the model with the necessary capacity to learn intricate clothing details.
 
-WandB report: https://wandb.ai/vasumathi1998-indian-institute-of-technology-madras/DA6401_Assignment_1_ee21d063/reports/DA6401_EE21D063_ASSIGNMENT1--VmlldzoxNjEzNjEzOQ/edit?draftId=VmlldzoxNjEzNjUxNQ==  
+Full WandB report link: [Vasumathi_Raman_ee21d063_WandB_report](https://wandb.ai/vasumathi1998-indian-institute-of-technology-madras/DA6401_Assignment_1_ee21d063/reports/DA6401_EE21D063_ASSIGNMENT1--VmlldzoxNjEzNjEzOQ/edit?draftId=VmlldzoxNjEzNjUxNQ==)
+
 
 
 
