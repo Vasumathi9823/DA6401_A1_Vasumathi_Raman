@@ -1,0 +1,104 @@
+import wandb
+import numpy as np
+from sklearn.metrics import accuracy_score
+
+# Define the 3 strategic configurations
+fashion_configs = [
+    # Config 1:
+    {
+        "name": "Configuration 1",
+        "dataset": "fashion_mnist",
+        "epochs": 15,
+        "batch_size": 128,
+        "learning_rate": 0.001,
+        "optimizer": "rmsprop",
+        "activation": "tanh",
+        "weight_init": "xavier",
+        "num_layers": 3,
+        "hidden_neurons": 128,
+        "weight_decay": 0.0
+    },
+    # Config 2: 
+    {
+        "name": "Configuarion 2",
+        "dataset": "fashion_mnist",
+        "epochs": 15,
+        "batch_size": 128,
+        "learning_rate": 0.001,
+        "optimizer": "rmsprop",
+        "activation": "relu",
+        "weight_init": "xavier",
+        "num_layers": 3,
+        "hidden_neurons": 256, # Increased capacity
+        "weight_decay": 0.0
+    },
+    # Config 3: 
+    {
+        "name": "Configuration 3",
+        "dataset": "fashion_mnist",
+        "epochs": 15,
+        "batch_size": 64, # Smaller batch for more gradient updates
+        "learning_rate": 0.01,
+        "optimizer": "nag",
+        "activation": "relu",
+        "weight_init": "xavier",
+        "num_layers": 3,
+        "hidden_neurons": 256,
+        "weight_decay": 0.0005 # Added regularization
+    }
+]
+
+def run_fashion_challenge(configs):
+    results = {}
+
+    # Load dataset once (assuming your function handles 'fashion_mnist' as a string)
+    X_train, y_train_oh, X_val, y_val, X_test, y_test = load_and_prep_data('fashion_mnist')
+    input_dim = X_train.shape[1]
+    output_dim = 10
+    num_samples = X_train.shape[0]
+
+    for config in configs:
+        print(f"\n--- Starting Run: {config['name']} ---")
+        run = wandb.init(project='DA6401_Assignment_1_ee21d063', name=config['name'], config=config)
+
+        # Build Network
+        hidden_sizes = [config['hidden_neurons']] * config['num_layers']
+        model = NeuralNetwork(input_dim, hidden_sizes, output_dim, config['activation'], config['weight_init'])
+        loss_fn = CrossEntropy()
+
+        # Setup Optimizer
+        if config['optimizer'] == 'rmsprop':
+            opt = RMSProp(lr=config['learning_rate'], weight_decay=config['weight_decay'])
+        elif config['optimizer'] == 'nag':
+            opt = NAG(lr=config['learning_rate'], weight_decay=config['weight_decay'])
+        else:
+            opt = SGD(lr=config['learning_rate'], weight_decay=config['weight_decay'])
+
+        # Training Loop
+        for epoch in range(config['epochs']):
+            indices = np.random.permutation(num_samples)
+            for i in range(0, num_samples, config['batch_size']):
+                X_batch = X_train[indices[i:i+config['batch_size']]]
+                y_batch = y_train_oh[indices[i:i+config['batch_size']]]
+
+                logits = model.forward(X_batch)
+                loss_fn(logits, y_batch)
+                model.backward(loss_fn.derivative())
+                opt.update(model.layers)
+
+        # Evaluate on Test Set
+        test_logits = model.forward(X_test)
+        test_preds = np.argmax(test_logits, axis=1)
+        test_acc = accuracy_score(y_test, test_preds)
+
+        print(f"Final Test Accuracy for {config['name']}: {test_acc:.4f}")
+        wandb.log({"final_fashion_test_accuracy": test_acc})
+        results[config['name']] = test_acc
+
+        wandb.finish()
+
+    return results
+
+# Execute the challenge
+fashion_results = run_fashion_challenge(fashion_configs)
+print("\n OverallResults:", fashion_results)
