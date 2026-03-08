@@ -4,7 +4,7 @@ This is a part of DA6401 - Introduction to Deep Learning course Assignment
 # Assignment 1: Multi-Layer Perceptron for Image Classification
 
 # 2.1 Data Exploration & Class Profiling
-- W&B Table Integration: Leveraged wandb.Table to organize and visualize five distinct image samples for each of the ten categories, using wandb.Image for rendering.
+- W&B Table Integration: Leveraged wandb.Table to organize and visualize five distinct image samples for each of the ten categories from MNIST dataset, using wandb.Image for rendering.
 - Balanced Sampling: Utilized a dictionary-based counter to ensure exactly 50 samples (5 per class) were logged, providing a high-level overview of class diversity.
 - Structural Overlap Analysis: Conducted a visual audit to pinpoint naturally similar pairs, such as digits 4 and 9.
 - Model Impact Assessment: Determined that high visual ambiguity populates the off-diagonal cells of the confusion matrix, necessitating robust normalization or deeper architectures.
