@@ -22,6 +22,7 @@ The MNIST sample visualization is available in [here](https://wandb.ai/vasumathi
 - Convergence Dynamics: Logged training loss at every step to visualize the trajectory and steepness of the descent during the critical initial training phase.
 - Superiority Mapping: Identified which adaptive or momentum-based methods achieved the lowest loss threshold within the first five epochs.
 - RMSProp Justification: Highlighted how RMSProp’s adaptive scaling of the learning rate prevents vertical oscillations, allowing for more aggressive horizontal progress.
+  
   Respective Code [link](https://github.com/Vasumathi9823/DA6401_A1_Vasumathi_Raman/blob/main/wandb_Q2.3)
   
 # 2.4 Gradient Flow & Activation Functions
@@ -29,6 +30,7 @@ The MNIST sample visualization is available in [here](https://wandb.ai/vasumathi
 - Gradient Norm Tracking: Monitored the L_2 norm of the first hidden layer's weights using np.linalg.norm to detect the onset of signal decay.
 - Vanishing Gradient Proof: Documented the rapid decay of Sigmoid gradients toward zero, contrasting it with the sustained signal flow of the ReLU model.
 - Saturation Resistance: Analyzed how ReLU avoids the "saturation zones" of Sigmoid, ensuring that deep networks continue to learn across all layers.
+  
   Respective Code [link](https://github.com/Vasumathi9823/DA6401_A1_Vasumathi_Raman/blob/main/wandb_Q2.4)
   
 # 2.5 ReLU "Dead Neuron" Analysis
@@ -36,6 +38,7 @@ The MNIST sample visualization is available in [here](https://wandb.ai/vasumathi
 - Symptom Identification: Defined "Dead Neurons" by identifying high-density spikes at exactly 0.0, indicating neurons that have permanently ceased firing.
 - Tanh Comparison: Contrasted this behavior with Tanh’s zero-centered, non-terminating activations, showing that Tanh neurons slow down but rarely "die."
 - Learning Rate Impact: Demonstrated how excessive learning rates (e.g., 0.1) force ReLU biases into a permanent negative state, leading to accuracy plateaus.
+  
   Respective Code [link](https://github.com/Vasumathi9823/DA6401_A1_Vasumathi_Raman/blob/main/wandb_Q2.5)
   
 # 2.6 Loss Function Evaluation
@@ -43,6 +46,7 @@ The MNIST sample visualization is available in [here](https://wandb.ai/vasumathi
 - Convergence Trajectory: Overlaid the training curves of both models to visualize which loss function minimized error more effectively.
 - Gradient Slope Analysis: Mathematically justified Cross-Entropy’s speed, as its derivative with Softmax provides a steeper gradient for incorrect classifications.
 - Optimization Deadlocks: Documented how MSE experiences "learning stalls" when predictions are significantly distant from the target labels.
+  
   Respective Code [link](https://github.com/Vasumathi9823/DA6401_A1_Vasumathi_Raman/blob/main/wandb_Q2.6)
   
 # 2.7 Generalization & Global Performance
@@ -50,6 +54,7 @@ The MNIST sample visualization is available in [here](https://wandb.ai/vasumathi
 - Overfitting Diagnostics: Flagged specific configurations that yielded near-perfect training scores but failed to generalize on the test data.
 - Gap Interpretation: Defined the delta between training and test performance as the "Generalization Gap," a clear indicator of data memorization.
 - Refinement Strategy: Concluded that high-gap models require regularization techniques like weight_decay or dropout to bridge the performance divide.
+  
   Respective Code [link](https://github.com/Vasumathi9823/DA6401_A1_Vasumathi_Raman/blob/main/wandb_Q2.7)
   
 # 2.8 Comprehensive Error Analysis
@@ -57,6 +62,7 @@ The MNIST sample visualization is available in [here](https://wandb.ai/vasumathi
 - Failure Gallery Log: Filtered and logged misclassified samples to provide a visual "Failure Gallery," highlighting specific images that confused the model.
 - Confusion Clustering: Observed common error patterns, such as the model's inability to distinguish between different types of shirts in the Fashion-MNIST set.
 - Failure Heatmaps: Created visual averages of "incorrect" images to detect whether background noise or stroke thickness influenced misclassification.
+  
   Respective Code [link](https://github.com/Vasumathi9823/DA6401_A1_Vasumathi_Raman/blob/main/wandb_Q2.8)
   
 # 2.9 Initialization & Symmetry Breaking
@@ -64,6 +70,7 @@ The MNIST sample visualization is available in [here](https://wandb.ai/vasumathi
 - Neuron Trajectory Tracking: Logged the gradients of five specific neurons to check if their update paths diverged or remained identical.
 - Symmetry Evidence: Documented how zero-initialization causes perfectly overlapping gradient lines, effectively reducing layer capacity to a single neuron.
 - Symmetry Breaking Necessity: Argued that random initialization is mathematically required to allow neurons to "specialize" in different geometric features.
+  
   Respective Code [link](https://github.com/Vasumathi9823/DA6401_A1_Vasumathi_Raman/blob/main/wandb_Q2.9)
   
 # 2.10 Fashion-MNIST Adaptability
