@@ -66,8 +66,7 @@ The MNIST sample visualization is available in
 - Complexity Findings: Reported that accuracy typically drops on clothing data due to the higher entropy and texture variance compared to simple digits.
 - Hyperparameter Scaling: Justified increasing hidden_neurons (128 to 256) to provide the model with the necessary capacity to learn intricate clothing details.
 
-Full WandB report link: [Vasumathi_Raman_ee21d063_WandB_report](https://wandb.ai/vasumathi1998-indian-institute-of-technology-madras/DA6401_Assignment_1_ee21d063/reports/DA6401_EE21D063_ASSIGNMENT1--VmlldzoxNjEzNjEzOQ/edit?draftId=VmlldzoxNjEzNjUxNQ==)
-
+Full WandB report link: [Vasumathi_Raman_ee21d063_WandB_report](https://wandb.ai/vasumathi1998-indian-institute-of-technology-madras/DA6401_Assignment_1_ee21d063/reports/DA6401_EE21D063_ASSIGNMENT1--VmlldzoxNjEzNjEzOQ)
 
 
 
