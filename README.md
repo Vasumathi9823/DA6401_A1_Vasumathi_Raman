@@ -81,7 +81,7 @@ The MNIST sample visualization is available in [here](https://wandb.ai/vasumathi
   Respective Code [link](https://github.com/Vasumathi9823/DA6401_A1_Vasumathi_Raman/blob/main/wand_Q2.10)
 
 #
-Full WandB report link: [Vasumathi_Raman_ee21d063_WandB_report](https://wandb.ai/vasumathi1998-indian-institute-of-technology-madras/DA6401_Assignment_1_ee21d063/reports/DA6401_EE21D063_ASSIGNMENT1--VmlldzoxNjEzNjEzOQ)
+Full WandB report link: [Vasumathi_Raman_ee21d063_WandB_report](https://api.wandb.ai/links/vasumathi1998-indian-institute-of-technology-madras/49pilhjg)
 
 
 
